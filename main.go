@@ -40,6 +40,7 @@ func setupFlags(app *kingpin.Application) {
 	app.Flag("install", "Attempt to install all known linters.").Short('i').BoolVar(&config.Install)
 	app.Flag("update", "Pass -u to go tool when installing.").Short('u').BoolVar(&config.Update)
 	app.Flag("force", "Pass -f to go tool when installing.").Short('f').BoolVar(&config.Force)
+	app.Flag("quiet-warnings", "Don't print any warnings").Short('q').BoolVar(&config.QuietWarnings)
 	app.Flag("download-only", "Pass -d to go tool when installing.").BoolVar(&config.DownloadOnly)
 	app.Flag("debug", "Display messages for failed linters, etc.").Short('d').BoolVar(&config.Debug)
 	app.Flag("concurrency", "Number of concurrent linters to run.").PlaceHolder(fmt.Sprintf("%d", runtime.NumCPU())).Short('j').IntVar(&config.Concurrency)
@@ -121,7 +122,9 @@ func debug(format string, args ...interface{}) {
 }
 
 func warning(format string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, "WARNING: "+format+"\n", args...)
+	if !config.QuietWarnings {
+		fmt.Fprintf(os.Stderr, "WARNING: "+format+"\n", args...)
+	}
 }
 
 func formatLinters() string {
@@ -186,8 +189,10 @@ Severity override map (default is "warning"):
 		status |= outputToConsole(issues)
 	}
 	for err := range errch {
-		warning("%s", err)
-		status |= 2
+		if !config.QuietWarnings {
+			warning("%s", err)
+			status |= 2
+		}
 	}
 	elapsed := time.Since(start)
 	debug("total elapsed time %s", elapsed)

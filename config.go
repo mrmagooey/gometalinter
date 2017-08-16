@@ -29,6 +29,7 @@ type Config struct { // nolint: aligncheck
 	Install         bool
 	Update          bool
 	Force           bool
+	QuietWarnings   bool
 	DownloadOnly    bool
 	Debug           bool
 	Concurrency     int
